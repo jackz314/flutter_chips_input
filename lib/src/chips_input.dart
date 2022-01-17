@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -10,8 +9,7 @@ import 'text_cursor.dart';
 
 typedef ChipsInputSuggestions<T> = FutureOr<List<T>> Function(String query);
 typedef ChipSelected<T> = void Function(T data, bool selected);
-typedef ChipsBuilder<T> = Widget Function(
-    BuildContext context, ChipsInputState<T> state, T data);
+typedef ChipsBuilder<T> = Widget Function(BuildContext context, ChipsInputState<T> state, T data);
 
 const kObjectReplacementChar = 0xFFFD;
 
@@ -20,9 +18,8 @@ extension on TextEditingValue {
         text.codeUnits.where((ch) => ch != kObjectReplacementChar),
       );
 
-  List<int> get replacementCharacters => text.codeUnits
-      .where((ch) => ch == kObjectReplacementChar)
-      .toList(growable: false);
+  List<int> get replacementCharacters =>
+      text.codeUnits.where((ch) => ch == kObjectReplacementChar).toList(growable: false);
 
   int get replacementCharactersCount => replacementCharacters.length;
 }
@@ -88,8 +85,7 @@ class ChipsInput<T> extends StatefulWidget {
   ChipsInputState<T> createState() => ChipsInputState<T>();
 }
 
-class ChipsInputState<T> extends State<ChipsInput<T>>
-    implements TextInputClient {
+class ChipsInputState<T> extends State<ChipsInput<T>> implements TextInputClient {
   Set<T> _chips = <T>{};
   List<T>? _suggestions;
   final _suggestionsStreamController = StreamController<List<T>>.broadcast();
@@ -112,8 +108,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
 
   bool get _hasInputConnection => _textInputConnection?.attached ?? false;
 
-  bool get _hasReachedMaxChips =>
-      widget.maxChips != null && _chips.length >= widget.maxChips!;
+  bool get _hasReachedMaxChips => widget.maxChips != null && _chips.length >= widget.maxChips!;
 
   late FocusNode _focusNode;
   late FocusAttachment _nodeAttachment;
@@ -124,9 +119,8 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
   void initState() {
     super.initState();
     _chips.addAll(widget.initialValue);
-    _suggestions = widget.initialSuggestions
-        ?.where((r) => !_chips.contains(r))
-        .toList(growable: false);
+    _suggestions =
+        widget.initialSuggestions?.where((r) => !_chips.contains(r)).toList(growable: false);
     _suggestionsBoxController = SuggestionsBoxController(context);
 
     _focusNode = widget.focusNode ?? FocusNode();
@@ -190,19 +184,14 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
         final renderBoxOffset = renderBox.localToGlobal(Offset.zero);
         final topAvailableSpace = renderBoxOffset.dy;
         final mq = MediaQuery.of(context);
-        final bottomAvailableSpace = mq.size.height -
-            mq.viewInsets.bottom -
-            renderBoxOffset.dy -
-            size.height;
+        final bottomAvailableSpace =
+            mq.size.height - mq.viewInsets.bottom - renderBoxOffset.dy - size.height;
         var _suggestionBoxHeight = max(topAvailableSpace, bottomAvailableSpace);
         if (null != widget.suggestionsBoxMaxHeight) {
-          _suggestionBoxHeight =
-              min(_suggestionBoxHeight, widget.suggestionsBoxMaxHeight!);
+          _suggestionBoxHeight = min(_suggestionBoxHeight, widget.suggestionsBoxMaxHeight!);
         }
         final showTop = topAvailableSpace > bottomAvailableSpace;
-        // print("showTop: $showTop" );
-        final compositedTransformFollowerOffset =
-            showTop ? Offset(0, -size.height) : Offset.zero;
+        final compositedTransformFollowerOffset = showTop ? Offset(0, -size.height) : Offset.zero;
 
         return StreamBuilder<List<T>>(
           stream: _suggestionsStreamController.stream,
@@ -294,7 +283,11 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
     Future.delayed(const Duration(milliseconds: 300), () {
       WidgetsBinding.instance?.addPostFrameCallback((_) async {
         final renderBox = context.findRenderObject() as RenderBox;
-        await Scrollable.of(context)?.position.ensureVisible(renderBox);
+        await Scrollable.of(context)?.position.ensureVisible(renderBox).then((_) {
+          WidgetsBinding.instance?.addPostFrameCallback((_) {
+            _suggestionsBoxController.overlayEntry?.markNeedsBuild();
+          });
+        });
       });
     });
   }
@@ -303,8 +296,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
     final localId = ++_searchId;
     final results = await widget.findSuggestions(value);
     if (_searchId == localId && mounted) {
-      _suggestions =
-          results.where((r) => !_chips.contains(r)).toList(growable: false);
+      _suggestions = results.where((r) => !_chips.contains(r)).toList(growable: false);
     }
     _suggestionsStreamController.add(_suggestions ?? []);
   }
@@ -325,8 +317,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
       setState(() {
         _value = value;
       });
-      if (value.replacementCharactersCount <
-          _oldTextEditingValue.replacementCharactersCount) {
+      if (value.replacementCharactersCount < _oldTextEditingValue.replacementCharactersCount) {
         final removedChip = _chips.last;
         _chips = Set.of(_chips.take(value.replacementCharactersCount));
         widget.onChanged(_chips.toList(growable: false));
@@ -344,26 +335,19 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
   }
 
   void _updateTextInputState({bool replaceText = false, String putText = ''}) {
-    final updatedText =
-        String.fromCharCodes(_chips.map((_) => kObjectReplacementChar)) +
-            "${replaceText ? '' : _value.normalCharactersText}" +
-            putText;
+    final updatedText = String.fromCharCodes(_chips.map((_) => kObjectReplacementChar)) +
+        "${replaceText ? '' : _value.normalCharactersText}" +
+        putText;
     setState(() {
       final textLength = updatedText.characters.length;
-      final replacedLength = _chips.length;
       _value = _value.copyWith(
         text: updatedText,
         selection: TextSelection.collapsed(offset: textLength),
-        composing: (Platform.isIOS || replacedLength == textLength)
-            ? TextRange.empty
-            : TextRange(
-                start: replacedLength,
-                end: textLength,
-              ),
       );
     });
     _textInputConnection ??= TextInput.attach(this, textInputConfiguration);
     _textInputConnection?.setEditingState(_value);
+    _textInputConnection?.show();
   }
 
   @override
@@ -417,9 +401,8 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
   @override
   Widget build(BuildContext context) {
     _nodeAttachment.reparent();
-    final chipsChildren = _chips
-        .map<Widget>((data) => widget.chipBuilder(context, this, data))
-        .toList();
+    final chipsChildren =
+        _chips.map<Widget>((data) => widget.chipBuilder(context, this, data)).toList();
 
     final theme = Theme.of(context);
 
@@ -436,8 +419,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
                 _value.normalCharactersText,
                 maxLines: 1,
                 overflow: widget.textOverflow,
-                style: widget.textStyle ??
-                    theme.textTheme.subtitle1?.copyWith(height: 1.5),
+                style: widget.textStyle ?? theme.textTheme.subtitle1?.copyWith(height: 1.5),
               ),
             ),
             Flexible(
@@ -448,39 +430,55 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
         ),
       ),
     );
+    return RawKeyboardListener(
+      focusNode: _focusNode,
+      onKey: (event) {
+        final str = currentTextEditingValue.text;
 
-    return NotificationListener<SizeChangedLayoutNotification>(
-      onNotification: (SizeChangedLayoutNotification val) {
-        WidgetsBinding.instance?.addPostFrameCallback((_) async {
-          _suggestionsBoxController.overlayEntry?.markNeedsBuild();
-        });
-        return true;
+        /// Make sure to filter event since without checking 'RawKeyDownEvent' will trigger this multiple times (2) because of RawKeyUpEvent
+        if (event.runtimeType.toString() == 'RawKeyDownEvent' &&
+            event.logicalKey == LogicalKeyboardKey.backspace &&
+            str.isNotEmpty) {
+          final sd = str.substring(0, str.length - 1);
+
+          /// Make sure to also update cursor position using the TextSelection.collapsed.
+          updateEditingValue(
+              TextEditingValue(text: sd, selection: TextSelection.collapsed(offset: sd.length)));
+        }
       },
-      child: SizeChangedLayoutNotifier(
-        child: Column(
-          children: <Widget>[
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                requestKeyboard();
-              },
-              child: InputDecorator(
-                decoration: widget.decoration,
-                isFocused: _focusNode.hasFocus,
-                isEmpty: _value.text.isEmpty && _chips.isEmpty,
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 4.0,
-                  runSpacing: 4.0,
-                  children: chipsChildren,
+      child: NotificationListener<SizeChangedLayoutNotification>(
+        onNotification: (SizeChangedLayoutNotification val) {
+          WidgetsBinding.instance?.addPostFrameCallback((_) async {
+            _suggestionsBoxController.overlayEntry?.markNeedsBuild();
+          });
+          return true;
+        },
+        child: SizeChangedLayoutNotifier(
+          child: Column(
+            children: <Widget>[
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  requestKeyboard();
+                },
+                child: InputDecorator(
+                  decoration: widget.decoration,
+                  isFocused: _focusNode.hasFocus,
+                  isEmpty: _value.text.isEmpty && _chips.isEmpty,
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 4.0,
+                    runSpacing: 4.0,
+                    children: chipsChildren,
+                  ),
                 ),
               ),
-            ),
-            CompositedTransformTarget(
-              link: _layerLink,
-              child: Container(),
-            ),
-          ],
+              CompositedTransformTarget(
+                link: _layerLink,
+                child: Container(),
+              ),
+            ],
+          ),
         ),
       ),
     );
