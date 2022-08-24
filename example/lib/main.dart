@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_chips_input/flutter_chips_input.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(ProviderScope(child: MyApp()));
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -58,12 +59,10 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Flutter Chips Input Example'),
-      ),
+      appBar: AppBar(title: const Text('Flutter Chips Input Example')),
       resizeToAvoidBottomInset: false,
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: SingleChildScrollView(
           child: Column(
             children: <Widget>[
@@ -199,14 +198,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 },
               ),*/
-              RaisedButton(
-                child: Text('Add Chip'),
+              ElevatedButton(
                 onPressed: () {
                   _chipKey.currentState.selectSuggestion(AppProfile(
                       'Gina',
                       'fred@flutter.io',
                       'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'));
                 },
+                child: const Text('Add Chip'),
               ),
             ],
           ),

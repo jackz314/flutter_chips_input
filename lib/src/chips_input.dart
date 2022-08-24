@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'suggestions_box_controller.dart';
 import 'text_cursor.dart';
@@ -10,6 +11,7 @@ import 'text_cursor.dart';
 typedef ChipsInputSuggestions<T> = FutureOr<List<T>> Function(String query);
 typedef ChipSelected<T> = void Function(T data, bool selected);
 typedef ChipsBuilder<T> = Widget Function(BuildContext context, ChipsInputState<T> state, T data);
+typedef StateListener<T> = void Function(ChipsInputState<T> state);
 
 const kObjectReplacementChar = 0xFFFD;
 
@@ -24,7 +26,7 @@ extension on TextEditingValue {
   int get replacementCharactersCount => replacementCharacters.length;
 }
 
-class ChipsInput<T> extends StatefulWidget {
+class ChipsInput<T> extends ConsumerStatefulWidget {
   const ChipsInput({
     Key? key,
     this.initialValue = const [],
@@ -34,7 +36,7 @@ class ChipsInput<T> extends StatefulWidget {
     required this.suggestionBuilder,
     required this.findSuggestions,
     required this.onChanged,
-    this.onChipTapped,
+    this.onAdded,
     this.maxChips,
     this.textStyle,
     this.suggestionsBoxMaxHeight,
@@ -50,6 +52,7 @@ class ChipsInput<T> extends StatefulWidget {
     this.allowChipEditing = false,
     this.focusNode,
     this.initialSuggestions,
+    this.stateListener,
   })  : assert(maxChips == null || initialValue.length <= maxChips),
         super(key: key);
 
@@ -58,8 +61,7 @@ class ChipsInput<T> extends StatefulWidget {
   final bool enabled;
   final ChipsInputSuggestions<T> findSuggestions;
   final ValueChanged<List<T>> onChanged;
-  @Deprecated('Will be removed in the next major version')
-  final ValueChanged<T>? onChipTapped;
+  final ValueChanged<T>? onAdded;
   final ChipsBuilder<T> chipBuilder;
   final ChipsBuilder<T> suggestionBuilder;
   final List<T> initialValue;
@@ -81,11 +83,13 @@ class ChipsInput<T> extends StatefulWidget {
 
   final TextCapitalization textCapitalization;
 
+  final ProviderListenable<List<T>>? stateListener;
+
   @override
   ChipsInputState<T> createState() => ChipsInputState<T>();
 }
 
-class ChipsInputState<T> extends State<ChipsInput<T>> implements TextInputClient {
+class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInputClient {
   Set<T> _chips = <T>{};
   List<T>? _suggestions;
   final _suggestionsStreamController = StreamController<List<T>>.broadcast();
@@ -255,6 +259,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>> implements TextInputClient
     } else {
       _suggestionsBoxController.close();
     }
+    widget.onAdded?.call(data);
     widget.onChanged(_chips.toList(growable: false));
   }
 
@@ -265,6 +270,15 @@ class ChipsInputState<T> extends State<ChipsInput<T>> implements TextInputClient
       _updateTextInputState();
       widget.onChanged(_chips.toList(growable: false));
     }
+  }
+
+  void updateChips(List<T> data) {
+    setState(() {
+      _chips.clear();
+      _chips.addAll(data);
+    });
+    _enteredTexts.clear();
+    _updateTextInputState();
   }
 
   void _openInputConnection() {
@@ -403,6 +417,12 @@ class ChipsInputState<T> extends State<ChipsInput<T>> implements TextInputClient
     _nodeAttachment.reparent();
     final chipsChildren =
         _chips.map<Widget>((data) => widget.chipBuilder(context, this, data)).toList();
+
+    if (widget.stateListener != null) {
+      ref.listen(widget.stateListener!, (List<T>? old, List<T> categories) {
+        updateChips(categories);
+      });
+    }
 
     final theme = Theme.of(context);
 
