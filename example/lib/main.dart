@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_chips_input/flutter_chips_input.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() => runApp(ProviderScope(child: MyApp()));
+void main() => runApp(const ProviderScope(child: MyApp()));
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -15,13 +16,13 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         // brightness: Brightness.dark,
       ),
-      home: MyHomePage(),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -29,6 +30,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _chipKey = GlobalKey<ChipsInputState>();
+
   @override
   Widget build(BuildContext context) {
     const mockResults = <AppProfile>[
@@ -66,8 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: SingleChildScrollView(
           child: Column(
             children: <Widget>[
-              TextField(),
-              TextField(),
               ChipsInput(
                 key: _chipKey,
                 /*initialValue: [
@@ -78,8 +78,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 // allowChipEditing: true,
                 keyboardAppearance: Brightness.dark,
                 textCapitalization: TextCapitalization.words,
-                enabled: true,
-                maxChips: 5,
+                // enabled: false,
+                // maxChips: 5,
                 textStyle: const TextStyle(
                     height: 1.5, fontFamily: 'Roboto', fontSize: 16),
                 decoration: const InputDecoration(
@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (data) {
                   // print(data);
                 },
-                chipBuilder: (context, state, profile) {
+                chipBuilder: (context, state, dynamic profile) {
                   return InputChip(
                     key: ObjectKey(profile),
                     label: Text(profile.name),
@@ -124,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   );
                 },
-                suggestionBuilder: (context, state, profile) {
+                suggestionBuilder: (context, state, dynamic profile) {
                   return ListTile(
                     key: ObjectKey(profile),
                     leading: CircleAvatar(
@@ -136,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 },
               ),
-              // TextField(),
+              const TextField(),
               /*ChipsInput(
                 initialValue: [
                   AppProfile('John Doe', 'jdoe@flutter.io',
@@ -200,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),*/
               ElevatedButton(
                 onPressed: () {
-                  _chipKey.currentState.selectSuggestion(AppProfile(
+                  _chipKey.currentState!.selectSuggestion(const AppProfile(
                       'Gina',
                       'fred@flutter.io',
                       'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'));
