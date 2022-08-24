@@ -37,6 +37,7 @@ class ChipsInput<T> extends ConsumerStatefulWidget {
     required this.findSuggestions,
     required this.onChanged,
     this.onAdded,
+    this.onDeleted,
     this.maxChips,
     this.textStyle,
     this.suggestionsBoxMaxHeight,
@@ -62,6 +63,7 @@ class ChipsInput<T> extends ConsumerStatefulWidget {
   final ChipsInputSuggestions<T> findSuggestions;
   final ValueChanged<List<T>> onChanged;
   final ValueChanged<T>? onAdded;
+  final ValueChanged<T>? onDeleted;
   final ChipsBuilder<T> chipBuilder;
   final ChipsBuilder<T> suggestionBuilder;
   final List<T> initialValue;
@@ -334,6 +336,7 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
       if (value.replacementCharactersCount < _oldTextEditingValue.replacementCharactersCount) {
         final removedChip = _chips.last;
         _chips = Set.of(_chips.take(value.replacementCharactersCount));
+        widget.onDeleted?.call(removedChip);
         widget.onChanged(_chips.toList(growable: false));
         var putText = '';
         if (widget.allowChipEditing && _enteredTexts.containsKey(removedChip)) {
