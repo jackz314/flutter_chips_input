@@ -145,6 +145,7 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
       if (mounted && widget.autofocus) {
         FocusScope.of(context).autofocus(_effectiveFocusNode);
       }
+      _updateTextInputState(replaceText: true);
     });
   }
 
@@ -472,7 +473,7 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
       ),
     );
     return RawKeyboardListener(
-      focusNode: _focusNode,
+      focusNode: _effectiveFocusNode,
       onKey: (event) {
         final str = currentTextEditingValue.text;
 
@@ -483,8 +484,10 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
           final sd = str.substring(0, str.length - 1);
 
           /// Make sure to also update cursor position using the TextSelection.collapsed.
-          updateEditingValue(
-              TextEditingValue(text: sd, selection: TextSelection.collapsed(offset: sd.length)));
+          if (!kIsWeb){ //
+            updateEditingValue(
+                TextEditingValue(text: sd, selection: TextSelection.collapsed(offset: sd.length)));
+          }
         }
       },
       child: NotificationListener<SizeChangedLayoutNotification>(
