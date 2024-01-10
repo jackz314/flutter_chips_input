@@ -102,6 +102,18 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> with TextInputClie
   late SuggestionsBoxController _suggestionsBoxController;
   final _layerLink = LayerLink();
   final Map<T?, String> _enteredTexts = <T, String>{};
+  @override
+  void didChangeInputControl(TextInputControl? oldControl, TextInputControl? newControl) {
+    super.didChangeInputControl(oldControl, newControl);
+  }
+  @override
+  void insertContent(KeyboardInsertedContent content) {
+    super.insertContent(content);
+  }
+  @override
+  void performSelector(String selectorName) {
+    super.performSelector(selectorName);
+  }
 
   TextInputConfiguration get textInputConfiguration => TextInputConfiguration(
         inputType: widget.inputType,
