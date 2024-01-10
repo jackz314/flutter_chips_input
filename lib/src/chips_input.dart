@@ -95,8 +95,7 @@ class ChipsInput<T> extends ConsumerStatefulWidget {
 class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInputClient {
   Set<T> _chips = <T>{};
   List<T?>? _suggestions;
-  final StreamController<List<T?>?> _suggestionsStreamController =
-      StreamController<List<T>?>.broadcast();
+  final StreamController<List<T?>?> _suggestionsStreamController = StreamController<List<T>?>.broadcast();
   int _searchId = 0;
   TextEditingValue _value = const TextEditingValue();
   TextInputConnection? _textInputConnection;
@@ -114,14 +113,12 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
         textCapitalization: widget.textCapitalization,
       );
 
-  bool get _hasInputConnection =>
-      _textInputConnection != null && _textInputConnection!.attached;
+  bool get _hasInputConnection => _textInputConnection != null && _textInputConnection!.attached;
 
   bool get _hasReachedMaxChips => widget.maxChips != null && _chips.length >= widget.maxChips!;
 
   FocusNode? _focusNode;
-  FocusNode get _effectiveFocusNode =>
-      widget.focusNode ?? (_focusNode ??= FocusNode());
+  FocusNode get _effectiveFocusNode => widget.focusNode ?? (_focusNode ??= FocusNode());
   late FocusAttachment _nodeAttachment;
 
   RenderBox? get renderBox => context.findRenderObject() as RenderBox?;
@@ -301,7 +298,7 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         final renderBox = context.findRenderObject() as RenderBox;
         await Scrollable.of(context)
-            ?.position
+            .position
             .ensureVisible(renderBox)
             .then((_) async {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -339,10 +336,9 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
     if (value.text != oldTextEditingValue.text) {
       setState(() => _value = value);
 
-      if (value.replacementCharactersCount < oldTextEditingValue.replacementCharactersCount) {
+      if (value.replacementCharactersCount < oldTextEditingValue.replacementCharactersCount && _chips.isNotEmpty) {
         final removedChip = _chips.last;
-        setState(() =>
-            _chips = Set.of(_chips.take(value.replacementCharactersCount)));
+        setState(() => _chips = Set.of(_chips.take(value.replacementCharactersCount)));
         widget.onDeleted?.call(removedChip);
         widget.onChanged(_chips.toList(growable: false));
         String? putText = '';
@@ -351,8 +347,6 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
           _enteredTexts.remove(removedChip);
         }
         _updateTextInputState(putText: putText);
-      } else {
-        _updateTextInputState();
       }
       _onSearchChanged(_value.normalCharactersText);
     }
@@ -361,9 +355,7 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
   void _updateTextInputState({replaceText = false, putText = ''}) {
     if (replaceText || putText != '') {
       final updatedText =
-          String.fromCharCodes(_chips.map((_) => kObjectReplacementChar)) +
-              (replaceText ? '' : _value.normalCharactersText) +
-              putText;
+          String.fromCharCodes(_chips.map((_) => kObjectReplacementChar)) + (replaceText ? '' : _value.normalCharactersText) + putText;
       setState(() => _value = _value.copyWith(
             text: updatedText,
             selection: TextSelection.collapsed(offset: updatedText.length),
@@ -435,6 +427,12 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
   AutofillScope? get currentAutofillScope => null;
 
   @override
+  void performSelector(String selectorName) {}
+
+  @override
+  void didChangeInputControl(TextInputControl? oldControl, TextInputControl? newControl) {}
+
+  @override
   Widget build(BuildContext context) {
     _nodeAttachment.reparent();
     final chipsChildren =
@@ -461,7 +459,7 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
                 _value.normalCharactersText,
                 maxLines: 1,
                 overflow: widget.textOverflow,
-                style: widget.textStyle ?? theme.textTheme.subtitle1!.copyWith(height: 1.5),
+                style: widget.textStyle ?? theme.textTheme.titleMedium!.copyWith(height: 1.5),
               ),
             ),
             Flexible(
