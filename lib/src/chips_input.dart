@@ -92,7 +92,7 @@ class ChipsInput<T> extends ConsumerStatefulWidget {
   ChipsInputState<T> createState() => ChipsInputState<T>();
 }
 
-class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInputClient {
+class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> with TextInputClient {
   Set<T> _chips = <T>{};
   List<T?>? _suggestions;
   final StreamController<List<T?>?> _suggestionsStreamController = StreamController<List<T>?>.broadcast();
@@ -425,12 +425,6 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> implements TextInp
 
   @override
   AutofillScope? get currentAutofillScope => null;
-
-  @override
-  void performSelector(String selectorName) {}
-
-  @override
-  void didChangeInputControl(TextInputControl? oldControl, TextInputControl? newControl) {}
 
   @override
   Widget build(BuildContext context) {
