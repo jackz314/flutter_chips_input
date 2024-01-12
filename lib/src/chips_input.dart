@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,6 +47,7 @@ class ChipsInput<T> extends ConsumerStatefulWidget {
     this.textOverflow = TextOverflow.clip,
     this.obscureText = false,
     this.autocorrect = true,
+    this.ensureVisible = false,
     this.actionLabel,
     this.inputAction = TextInputAction.done,
     this.keyboardAppearance = Brightness.light,
@@ -74,6 +76,7 @@ class ChipsInput<T> extends ConsumerStatefulWidget {
   final TextOverflow textOverflow;
   final bool obscureText;
   final bool autocorrect;
+  final bool ensureVisible;
   final String? actionLabel;
   final TextInputAction inputAction;
   final Brightness keyboardAppearance;
@@ -302,7 +305,9 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> with TextInputClie
       _textInputConnection?.show();
     }
 
-    _scrollToVisible();
+    if (widget.ensureVisible) {
+      _scrollToVisible();
+    }
   }
 
   void _scrollToVisible() {
@@ -380,7 +385,9 @@ class ChipsInputState<T> extends ConsumerState<ChipsInput<T>> with TextInputClie
     }
     _textInputConnection ??= TextInput.attach(this, textInputConfiguration);
     if(_textInputConnection?.attached ?? false) _textInputConnection?.setEditingState(_value);
-    _textInputConnection?.show();
+    if (!kIsWeb && Platform.isIOS) {
+      _textInputConnection?.show();
+    }
   }
 
   @override
